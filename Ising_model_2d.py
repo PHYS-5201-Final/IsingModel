@@ -47,7 +47,7 @@ def monte_carlo(beta, K, h, L, steps, spins):
     energies = [calculate_energy(spins, K, h, L)]
     for step in range(steps):
         spins = metropolis_algorithim(spins, beta, K, h, L)
-        if step % (steps//100) == 0:
+        if step % 100 == 0:
             energies.append(calculate_energy(spins, K, h, L))
     return spins, energies
 
