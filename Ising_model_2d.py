@@ -51,43 +51,70 @@ def monte_carlo(beta, K, h, L, steps, spins):
             energies.append(calculate_energy(spins, K, h, L))
     return spins, energies
 
+def magnetization(spins, L):
+    net_spin = 0
+    for i in range(L):
+        for j in range(L):
+            net_spin += spins[i, j]
+    return net_spin/(L**2)
 
-beta = 100000
+
+def run_monte_carlo(beta, K, h, L, steps, spins):
+    magnetization_values = []
+
+    for beta_value in beta:
+        copy_of_spins = spins.copy()
+        final_spins, energies = monte_carlo(beta_value, K, h, L, steps, copy_of_spins)
+        magnetization_value = magnetization(final_spins, L)
+        magnetization_values.append(magnetization_value)
+    return magnetization_values
+
+def Visualization_of_MC(initial_spins, final_spins, energies):
+    plt.figure(figsize=(12, 5))
+
+    plt.subplot(2, 2, 1)
+    plt.title("Initial Lattice Configuration")
+    plt.imshow(initial_spins, cmap="coolwarm")
+    plt.colorbar(label="Spin")
+
+    plt.subplot(2, 2, 2)
+    plt.title("Final Lattice Configuration")
+    plt.imshow(final_spins, cmap="coolwarm")
+    plt.colorbar(label="Spin")
+
+    plt.subplot(2, 2, 3)
+    plt.title("Residual Configuration")
+    plt.imshow(final_spins- initial_spins, cmap="coolwarm")
+    plt.colorbar(label="Spin")
+
+    plt.subplot(2, 2, 4)
+    plt.title("Energy vs. Monte Carlo Steps")
+    plt.plot(range(0, len(energies) * 100, 100), energies, label="Energy")
+    plt.xlabel("Monte Carlo Step")
+    plt.ylabel("Energy")
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+
+temp = np.linspace(0.001, 3, 500)
+beta = []
+for temp_value in temp:
+    beta.append(1/temp_value)
+
 K = 1
-h = -1
+h = 0
 L = 50
 steps = 10000
-spins_initial = initial_spins(L)
 
+spins_initial = initial_spins(L)
 copy_of_spins_initial = spins_initial.copy()
 
-final_spins, energies = monte_carlo(beta, K, h, L, steps, spins_initial)
+magnetization_values = run_monte_carlo(beta, K, h, L, steps, copy_of_spins_initial)
 
-
-# Visualization
-plt.figure(figsize=(12, 5))
-
-plt.subplot(2, 2, 1)
-plt.title("Initial Lattice Configuration")
-plt.imshow(copy_of_spins_initial, cmap="coolwarm")
-plt.colorbar(label="Spin")
-
-plt.subplot(2, 2, 2)
-plt.title("Final Lattice Configuration")
-plt.imshow(final_spins, cmap="coolwarm")
-plt.colorbar(label="Spin")
-
-plt.subplot(2, 2, 3)
-plt.title("Residual Configuration")
-plt.imshow(final_spins- copy_of_spins_initial, cmap="coolwarm")
-plt.colorbar(label="Spin")
-
-plt.subplot(2, 2, 4)
-plt.title("Energy vs. Monte Carlo Steps")
-plt.plot(range(0, len(energies) * 100, 100), energies, label="Energy")
-plt.xlabel("Monte Carlo Step")
-plt.ylabel("Energy")
-plt.legend()
-
-plt.tight_layout()
+plt.plot(temp, magnetization_values, label="Monte Carlo Steps")
 plt.show()
+
+
+
