@@ -65,22 +65,22 @@ def magnetization(spins, L):
             net_spin += spins[i, j]
     return net_spin/(L**2)
 
-def heat_capacity(energy_value, beta):
+def specific_heat(energy_value, beta, L):
     average_energy = np.average(energy_value)
     average_energy_squared = np.average(np.square(energy_value))
-    return (beta**2) *(average_energy_squared-(average_energy**2))
+    return (beta**2) *(average_energy_squared-(average_energy**2))/(L**2)
 
-def calculate_sus(magnetization_value, beta):
+def calculate_sus(magnetization_value, beta, L):
     # 1/T (<M^2> - <M>^2)
     M = np.average(magnetization_value)
     M_squared = np.average(np.square(magnetization_value))
-    sus = beta*(M_squared - M**2)
+    sus = beta*(M_squared - M**2)/(L**2)
     return sus
 
 
 def run_monte_carlo(beta, J, h, L, steps, spins):
     magnetization_values = []
-    heat_capacity_values = []
+    specific_heat_values = []
     susceptibility_values = []
 
     for beta_value in beta:
@@ -90,13 +90,13 @@ def run_monte_carlo(beta, J, h, L, steps, spins):
         magnetization_value = magnetization(final_spins, L)
         magnetization_values.append(magnetization_value)
 
-        heat_capacity_value = heat_capacity(energy_accumulator, beta_value)
-        heat_capacity_values.append(heat_capacity_value)
+        specific_heat_value = specific_heat(energy_accumulator, beta_value,L)
+        specific_heat_values.append(specific_heat_value)
 
-        susceptibility_value = calculate_sus(magnetization_acumulator, beta_value)
+        susceptibility_value = calculate_sus(magnetization_acumulator, beta_value, L)
         susceptibility_values.append(susceptibility_value)
 
-    return magnetization_values, heat_capacity_values, susceptibility_values
+    return magnetization_values, specific_heat_values, susceptibility_values
 
 def normalize(array):
     normalized_array = array.copy()
@@ -123,7 +123,7 @@ def scatter_2D(data, ax, title):
     ax.set_title(title)
     return
 
-def Visualization_of_MC(initial_spins, final_spins, energy, magnetization):# heat_capacity, suseptibility, steps):
+def Visualization_of_MC(initial_spins, final_spins, energy, magnetization):# specific_heat, suseptibility, steps):
     cmap = "PiYG"
     fig = plt.figure(figsize=(12, 12))
 
@@ -148,7 +148,7 @@ def Visualization_of_MC(initial_spins, final_spins, energy, magnetization):# hea
     xs = np.linspace(0, steps, len(energy))
     plt.plot(xs, normalize(energy), label="Energy")
     plt.plot(xs, normalize(magnetization), label="Magnetization")
-   # plt.plot(xs, normalize(heat_capacity, label="Specific Heat")
+   # plt.plot(xs, normalize(specific_heat, label="Specific Heat")
    # plt.plot(xs, normalize(suseptibility, label="Susceptibility")
     # plt.plot(xs, normalize(quantities[4]), label="Correlation Length")  # TODO
     plt.xlabel("Monte Carlo Step")
@@ -159,7 +159,7 @@ def Visualization_of_MC(initial_spins, final_spins, energy, magnetization):# hea
     plt.title("Trace Plot")
     plt.plot(xs[:-1], difference(normalize(energy)), label="Energy")
     plt.plot(xs[:-1], difference(normalize(magnetization)), label="Magnetization")
- #  plt.plot(xs[:-1], difference(normalize(heat_capacity)), label="Specific Heat")
+ #  plt.plot(xs[:-1], difference(normalize(specific_heat)), label="Specific Heat")
   #  plt.plot(xs[:-1], difference(normalize(suseptibility)), label="Susceptibility")
     # plt.plot(xs[:-1], difference(quantities[4]), label="Correlation Length")  # TODO
     plt.xlabel("Monte Carlo Step")
@@ -170,7 +170,7 @@ def Visualization_of_MC(initial_spins, final_spins, energy, magnetization):# hea
     plt.show()
     plt.close()
 
-temp = np.linspace(0.0001, 5, 100)
+temp = np.linspace(0.0001, 5, 300)
 beta = []
 for temp_value in temp:
     beta.append(1/temp_value)
@@ -191,23 +191,37 @@ copy_of_spins_initial = spins_initial.copy()
 #Visualization_of_MC(spins_initial, final_spins, energy, mag_values)
 
 
-magnetization_values, heat_capacity_values, susceptibility_values = run_monte_carlo(beta, J, h, L, steps, copy_of_spins_initial)
+magnetization_values, specific_heat_values, susceptibility_values = run_monte_carlo(beta, J, h, L, steps, copy_of_spins_initial)
 
 plt.plot(temp, np.abs(magnetization_values), label="Monte Carlo Steps")
 plt.ylabel("Magnetization")
 plt.xlabel("Temperature")
 plt.show()
 
-plt.plot(temp, heat_capacity_values, label="Monte Carlo Steps")
-plt.semilogy()
-plt.ylabel("Heat Capacity")
+plt.plot(temp, specific_heat_values, label="Monte Carlo Steps")
+#plt.semilogy()
+plt.ylabel("Specific Heat")
 plt.xlabel("Temperature")
 plt.show()
 
 plt.plot(temp, susceptibility_values, label="Monte Carlo Steps")
-plt.semilogy()
+#plt.semilogy()
 plt.ylabel("Susceptibility")
 plt.xlabel("Temperature")
 plt.show()
+def Tc_from_sus(susceptibility_values, temperatures):
+    i = susceptibility_values.index(max(susceptibility_values))
+    Tc = temperatures[i]
+    return Tc
+
+def Tc_from_specific_heat(specific_heat_values, temperatures):
+    i = specific_heat_values.index(max(specific_heat_values))
+    Tc = temperatures[i]
+    return Tc
+
+print("T_c is {} from susceptiblity".format(Tc_from_sus(susceptibility_values, temp)))
+print("T_c is {} from specific heat".format(Tc_from_specific_heat(specific_heat_values, temp)))
+
+
 
 
